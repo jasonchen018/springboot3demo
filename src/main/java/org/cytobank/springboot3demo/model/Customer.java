@@ -1,4 +1,4 @@
-package org.cytobank.springboot3demo;
+package org.cytobank.springboot3demo.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

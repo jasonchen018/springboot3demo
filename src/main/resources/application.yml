@@ -2,6 +2,11 @@ server:
   port: 886
 
 spring:
+  cache:
+    cache-names: customers
+    caffeine:
+      spec: initialCapacity=100,maximumSize=500,expireAfterAccess=5m,recordStats
+
   main:
     web-application-type: servlet
   datasource:
@@ -10,7 +15,8 @@ spring:
     password: password
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      # create, create-drop, update, validate
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
