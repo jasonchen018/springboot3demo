@@ -2,10 +2,10 @@ server:
   port: 886
 
 spring:
-  cache:
-    cache-names: customers
-    caffeine:
-      spec: initialCapacity=100,maximumSize=500,expireAfterAccess=5m,recordStats
+#  cache:
+#    cache-names: customers
+#    caffeine:
+#      spec: initialCapacity=100,maximumSize=500,expireAfterAccess=5m,recordStats
 
   main:
     web-application-type: servlet

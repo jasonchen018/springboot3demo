@@ -6,6 +6,9 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 
+/**
+ * @author jasonchen
+ */
 @Component
 public class CustomKeyGenerator implements KeyGenerator {
     @Override

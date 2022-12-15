@@ -55,7 +55,32 @@
 			<artifactId>caffeine</artifactId>
 			<version>3.1.2</version>
 		</dependency>
-    </dependencies>
+
+		<!-- https://mvnrepository.com/artifact/com.github.jbellis/jamm -->
+		<dependency>
+			<groupId>com.github.jbellis</groupId>
+			<artifactId>jamm</artifactId>
+			<version>0.3.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-core</artifactId>
+			<version>1.2.1</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.cytobank</groupId>
+			<artifactId>io</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+
+	</dependencies>
 
 	<build>
 		<plugins>
