@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import lombok.extern.slf4j.Slf4j;
 import org.cytobank.springboot3demo.constants.CaffeineCacheConstants;
 import org.cytobank.springboot3demo.utils.FileHandler;
@@ -34,11 +33,13 @@ public class CaffeineCacheController {
     private final CacheManager cacheManager;
     private final ObjectMapper objectMapper;
 
+    public static final long BYTES_PER_DOUBLE = Double.SIZE / Byte.SIZE;
+
     public CaffeineCacheController(final CacheManager cacheManager) {
         this.cacheManager = cacheManager;
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//        this.objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+//        this.objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     }
 
     @GetMapping("/name")
@@ -56,35 +57,57 @@ public class CaffeineCacheController {
     }
 
     @GetMapping("/stats")
-    public CacheStats getCacheStats() {
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME);
+    public String getCacheStats() {
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_CUSTOMERS);
         Cache nativeCoffeeCache = caffeineCache.getNativeCache();
-        return nativeCoffeeCache.stats();
+//        org.springframework.cache.Cache cache = cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME);
+//        Cache nativeCoffeeCache = (Cache) cache.getNativeCache();
+        return nativeCoffeeCache.stats().toString();
     }
 
     @GetMapping("/save")
-    public void saveStripeFileToCache() {
-        final Cache<String, Object> cache = (Cache<String, Object>) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME).getNativeCache();
+    public void saveMultiStripeFileToCache() {
+        final Cache<String, Object> cache = (Cache<String, Object>) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_EVENTS).getNativeCache();
 
         FileHandler fileHandler = new FileHandler();
-        // 200M
-        String path = "/Users/jasonchen/cytobank-data/cytobank/Temp/Cache/cytobank_development_experiments/834/experiment_834_cache/cytoflex_25m_tube4.fcs/channel_0";
-        double[] events = fileHandler.loadChannelStripeFileToCache(path);
+        // Every single file size is 200M
+        String stripeFileDir = "/Users/jasonchen/cytobank-data/cytobank/Temp/Cache/cytobank_development_experiments/834/experiment_834_cache/cytoflex_25m_tube4.fcs/";
+        for (int i = 0; i < 10; i++) {
+            String cacheKey = "channel_" + i;
+            String path = stripeFileDir + cacheKey;
+            double[] events = fileHandler.loadChannelStripeFileToCache(path);
+            long neededMemory = events.length * BYTES_PER_DOUBLE / 1024 / 1024;
+            log.info("Channel " + i + " needed Memory size: " + neededMemory + "M");
+            cache.put(cacheKey, events);
+//            cache.asMap().put(cacheKey, events);
+        }
+    }
 
-        cache.put("channel_0", events);
+    @GetMapping("/save/{key}")
+    public void saveOneStripeFileToCache(@PathVariable("key") String key) {
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_EVENTS);
+        com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
+        FileHandler fileHandler = new FileHandler();
+        // numberOfRawEvents: 25034752
+        String dir = "/Users/jasonchen/cytobank-data/cytobank/Temp/Cache/cytobank_development_experiments/834/experiment_834_cache/cytoflex_25m_tube4.fcs/";
+        String path = dir + key;
+        double[] events = fileHandler.loadChannelStripeFileToCache(path);
+        nativeCache.put(key, events);
+
     }
 
     @GetMapping("/keys")
     public Set<Object> keys() {
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME);
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_EVENTS);
         com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
 
         return nativeCache.asMap().keySet();
     }
 
     @GetMapping("/keys/{key}")
-    public Integer keys(@PathVariable("key") String key) {
-        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME);
+    public Integer getByKey(@PathVariable("key") String key) {
+        log.info("Invoke getByKey " + key);
+        CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_EVENTS);
         Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
         ConcurrentMap<Object, Object> data = nativeCache.asMap();
 

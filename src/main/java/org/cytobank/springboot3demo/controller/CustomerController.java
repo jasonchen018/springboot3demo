@@ -1,6 +1,7 @@
 package org.cytobank.springboot3demo.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cytobank.springboot3demo.constants.CaffeineCacheConstants;
 import org.cytobank.springboot3demo.indentify.CustomKeyGenerator;
 import org.cytobank.springboot3demo.model.Customer;
 import org.cytobank.springboot3demo.repository.CustomerRepository;
@@ -30,7 +31,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/customers")
 @Slf4j
-@CacheConfig(cacheNames = {"customers"})
+@CacheConfig(cacheNames = {CaffeineCacheConstants.CACHE_NAME_CUSTOMERS})
 public class CustomerController {
     @Autowired
     private CustomerRepository customerRepository;
@@ -48,7 +49,7 @@ public class CustomerController {
 
     @GetMapping("/{customerId}")
 //    @Cacheable(keyGenerator = "customKeyGenerator")
-    @Cacheable(key = "#id", unless = "#result == null")
+    @Cacheable(value = CaffeineCacheConstants.CACHE_NAME_CUSTOMERS, key = "#id", unless = "#result == null")
     public ResponseEntity<Customer> find(@PathVariable("customerId") Integer id) {
         log.info("Customer data fetched from database:: " + id);
         Optional<Customer> customer = customerRepository.findById(id);
@@ -56,7 +57,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    @CachePut(key = "#result.body.id")
+    @CachePut(value = CaffeineCacheConstants.CACHE_NAME_CUSTOMERS, key = "#result.body.id", unless = "#result == null")
     public ResponseEntity<Customer> save(@RequestBody NewCustomerRequest request) {
         Customer customer = new Customer();
         customer.setAge(request.age);
@@ -67,7 +68,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("{customerId}")
-    @CacheEvict(key = "#id", allEntries = true)
+    @CacheEvict(value = CaffeineCacheConstants.CACHE_NAME_CUSTOMERS, key = "#id", allEntries = true)
     public ResponseEntity<HttpStatus> deleteCustomer(@PathVariable("customerId") Integer id) {
         Optional<Customer> customer = customerRepository.findById(id);
         customer.ifPresent(value -> customerRepository.delete(value));
@@ -76,7 +77,7 @@ public class CustomerController {
     }
 
     @DeleteMapping("/delete/all")
-    @Caching(evict = {@CacheEvict(value = "customers", allEntries = true)})
+    @Caching(evict = {@CacheEvict(value = CaffeineCacheConstants.CACHE_NAME_CUSTOMERS, allEntries = true)})
     public ResponseEntity<HttpStatus> deleteAll() {
         log.info("Clean all cache");
         customerRepository.deleteAll();
@@ -84,7 +85,7 @@ public class CustomerController {
     }
 
     @PutMapping("{customerId}")
-    @CachePut(key = "#id")
+    @CachePut(value = CaffeineCacheConstants.CACHE_NAME_CUSTOMERS, key = "#id")
     public ResponseEntity<Customer> updateCustomer(@PathVariable("customerId") Integer id, @RequestBody NewCustomerRequest request) {
         Optional<Customer> customer = customerRepository.findById(id);
         if (customer.isPresent()) {

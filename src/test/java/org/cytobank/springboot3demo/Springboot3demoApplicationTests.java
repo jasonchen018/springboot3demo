@@ -1,7 +1,6 @@
 package org.cytobank.springboot3demo;
 
 import org.cytobank.springboot3demo.constants.CaffeineCacheConstants;
-import org.cytobank.springboot3demo.model.Input;
 import org.cytobank.springboot3demo.utils.FileHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +8,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCache;
-
-import java.util.Set;
 
 @SpringBootTest
 @EnableCaching
@@ -29,10 +26,18 @@ class Springboot3demoApplicationTests {
 //		input.setPath(path);
 //		fileHandler.handleRequest(input, null);
 
-		CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME);
+		CaffeineCache caffeineCache = (CaffeineCache) cacheManager.getCache(CaffeineCacheConstants.CACHE_NAME_CUSTOMERS);
 		com.github.benmanes.caffeine.cache.Cache<Object, Object> nativeCache = caffeineCache.getNativeCache();
 		nativeCache.put("s", "s");
 		nativeCache.put("sd", "sd");
+		for (int i = 0; i < nativeCache.asMap().keySet().size(); i++) {
+			System.out.println(nativeCache.asMap().keySet().toArray()[i]);
+		}
+
+		nativeCache.get("a", k -> k + ": Tom");
+
+		nativeCache.invalidate("s");
+
 		for (int i = 0; i < nativeCache.asMap().keySet().size(); i++) {
 			System.out.println(nativeCache.asMap().keySet().toArray()[i]);
 		}
